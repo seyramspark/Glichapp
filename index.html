@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0; /* Removed padding from body */
+            background-color: #1e2752;
+            border: 8px solid #10025f; /* Add border style as desired */
+            border-radius: 0px; /* Add border radius as desired */
+        }
+        .container {
+    width: 100%;
+    max-width: 600px; /* Set a maximum width if desired */
+    margin: 0 auto; /* Center the container horizontally */
+    height: 100vh; /* Set height to viewport height */
+    overflow-x: hidden; /* Hide horizontal overflow */
+    overflow-y: auto; /* Enable vertical scrolling */
+    background-color: #1e2752;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+        h1 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 50px;
+            height: 60px; /* Add desired height value */
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .container {
+        width: 100%; /* Set width to 100% */
+        height: 100%; /* Set height to 100% */
+        background-color: #1e2752;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        display: flex; /* Added display flex */
+        flex-direction: column; /* Added flex direction column */
+        justify-content: center; /* Center content vertically */
+        align-items: center; /* Center content horizontally */
+    }
+
+
+        .input-text {
+  flex: 1;
+  padding: 20px 50px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  outline: none;
+  background-color: #fff;
+  color: #000;
+  margin-top: 98px;
+  margin-bottom: 50px;
+
+  height: 20px; /* Add desired height value */
+}
+
+
+
+        .submit-button {
+            background-color: #fcbf49;
+            color: #000;
+            border: none;
+            padding: 10px 54px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            outline: none;
+            margin-top: 20px;
+            height: 60px; /* Add desired height value */
+        }
+
+        .microphone-button {
+            background-color: #4285f4;
+            color: #fff;
+            border: none;
+            padding: 15px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            outline: none;
+            margin-top: 20px;
+            margin-left: 10px;
+            height: 60px; /* Add desired height value */
+        }
+
+        
+
+
+        .processing {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: transparent;
+    z-index: 9999;
+}
+
+.processing-animation {
+  margin-top: 140px; /* adjust this value as needed */
+  width: var(--animation-size, 80px);
+  height: var(--animation-size, 80px);
+  background-image: url('https://media3.giphy.com/media/xThuWt89yRv9xkJyco/giphy.gif?cid=ecf05e47jxfhto4hlo0atilcsobdyabw4jtaecka26r0uigz&ep=v1_gifs_search&rid=giphy.gif&ct=g');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 1;
+  animation-name: vanish;
+  animation-duration: 8s; /* changed from 5s to 8s */
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+
+@keyframes vanish {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+
+        .processing-text {
+            font-style: italic;
+            font-size: 18px;
+            color: #777;
+        }
+
+
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Speech recognition variables
+            var recognition;
+            var isListening = false;
+
+            // Check if SpeechRecognition is available
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                // Create SpeechRecognition instance
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+                // Set properties
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                // Event when speech recognition starts
+                recognition.onstart = function() {
+                    isListening = true;
+                    $('.microphone-button').addClass('listening');
+                };
+
+                // Event when speech recognition stops
+                recognition.onend = function() {
+                    isListening = false;
+                    $('.microphone-button').removeClass('listening');
+                };
+
+                // Event when speech is recognized
+                recognition.onresult = function(event) {
+                    var transcript = event.results[0][0].transcript;
+
+                    // Set the input value
+                    $('.input-text').val(transcript);
+
+                    // Submit the form
+                    $('form').submit();
+                };
+            }
+
+            // Microphone button click event
+            $('.microphone-button').click(function() {
+                if (!isListening) {
+                    recognition.start();
+                } else {
+                    recognition.stop();
+                }
+            });
+
+            $('form').submit(function(event) {
+                event.preventDefault();
+                var form = $(this);
+                var url = form.attr('action');
+                var inputText = form.find("input[name='input_text']").val();
+
+                // Show processing illusion
+$('.output-text').addClass('processing');
+$('.processing').html('<div class="processing-animation"><div class=>');
+
+// Wait for 5 seconds before removing the processing class
+setTimeout(function() {
+  $('.output-text').removeClass('processing');
+}, 5000);
+
+
+$.ajax({
+    type: 'POST',
+    url: url,
+    data: {'input_text': inputText},
+    success: function(response) {
+  // Display response
+  var responseText = response.response;
+  $('#input-text').text(responseText);
+
+  // Speak the response text
+  speakText(responseText);
+}
+
+});
+
+            });
+        });
+    </script>
+</head>
+<body>
+    
+          </div>
+        <h1>Am John, LoveGod's Preaching Assistant</h1>
+        <div class="container">
+            
+            <div style="display: flex; justify-content: center;">
+                <img src="https://i.ibb.co/vkqxH19/love.jpg" alt="love" border="0" style="width: 550px; height: 250px;">
+            </div>
+
+        <form action="/get_response" method="post">
+            <div class="input-group">
+                <input type="text" class="input-text" name="input_text" placeholder="Enter your message" required>
+                <button type="submit" class="submit-button">Send</button>
+                <button type="button" class="microphone-button">&#128266;</button>
+            </div>
+        </form>
+        <div id="output-text" class="output-text"></div>
+<!-- Text-to-speech HTML code -->
+<div id="text-to-speech-container" style="display: flex; flex-direction: column; align-items: center;">
+  <div id="input-text" contenteditable="true" style="font-size: 30px; width: 320px; min-height: 120px; margin-bottom: 10px; background-color: #faefef; padding: 10px;"></div>
+  <div id="response-text" style="font-size: 20px; margin-bottom: 10px;"></div> <!-- New div element for displaying the response text -->
+  <div style="display: flex; justify-content: center; align-items: center;">
+    <button id="speak-btn" style="font-size: 20px; width: 100px; height: 40px; background-color: #fcbf49;">Play</button>
+    <button id="stop-btn" style="font-size: 20px; width: 100px; height: 40px; background-color: #fcbf49; margin-left: 10px;" disabled>Stop</button>
+    <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1" style="width: 100px; margin-left: 10px;">
+    <input type="range" id="rate-slider" min="0.5" max="2" step="0.1" value="1" style="width: 100px; margin-left: 10px;">
+  </div>
+</div>
+
+
+<!-- Text-to-speech JavaScript code -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function() {
+    // Speech synthesis variables
+    var synth = window.speechSynthesis;
+    var utterance;
+    var isPaused = false;
+    var isPlaying = false;
+    var currentText = '';
+
+    // Function to speak the text
+    function speakText(text) {
+      // Cancel any previous speech synthesis
+      synth.cancel();
+
+      // Create a new utterance
+      utterance = new SpeechSynthesisUtterance(text);
+      utterance.volume = $('#volume-slider').val();
+      utterance.rate = $('#rate-slider').val();
+      utterance.onend = function() {
+        $('#speak-btn').prop('disabled', false);
+        $('#stop-btn').prop('disabled', true);
+        removeWordHighlight();
+        isPlaying = false;
+      };
+      utterance.onboundary = function(event) {
+        if (event.name === 'word') {
+          highlightWord(event.charIndex, event.charLength);
+        }
+      };
+
+      // Speak the text
+      synth.speak(utterance);
+      $('#speak-btn').prop('disabled', true);
+      $('#stop-btn').prop('disabled', false);
+      $('#speak-btn').text('Pause');
+      removeWordHighlight();
+      isPlaying = true;
+    }
+
+    // Event listener for play/pause button click
+    $('#speak-btn').click(function() {
+      if (isPlaying) {
+        synth.pause();
+        isPaused = true;
+        $('#speak-btn').text('Resume');
+      } else {
+        var text = $('#input-text').text();
+        if (text !== currentText) {
+          speakText(text);
+          currentText = text;
+        } else {
+          synth.resume();
+          isPaused = false;
+          $('#speak-btn').text('Pause');
+        }
+      }
+    });
+
+    // Event listener for stop button click
+    $('#stop-btn').click(function() {
+      synth.cancel();
+      utterance = null;
+      isPaused = false;
+      $('#speak-btn').prop('disabled', false);
+      $('#stop-btn').prop('disabled', true);
+      $('#speak-btn').text('Play');
+      removeWordHighlight();
+      isPlaying = false;
+      currentText = '';
+    });
+
+    // Event listener for volume slider change
+    $('#volume-slider').change(function() {
+      if (utterance) {
+        utterance.volume = $(this).val();
+        synth.speak(utterance);
+      }
+    });
+
+    // Event listener for rate slider change
+    $('#rate-slider').change(function() {
+      if (utterance) {
+        utterance.rate = $(this).val();
+        synth.speak(utterance);
+      }
+    });
+
+    // Helper function to highlight the current word
+    function highlightWord(charIndex, charLength) {
+      var text = $('#input-text').text();
+      var highlightedText = '<span style="background-color: yellow;">' + text.substr(charIndex, charLength) + '</span>';
+      var newText = text.substr(0, charIndex) + highlightedText + text.substr(charIndex + charLength);
+      $('#input-text').html(newText);
+    }
+
+    // Helper function to remove word highlighting
+    function removeWordHighlight() {
+      var text = $('#input-text').text();
+      $('#input-text').html(text);
+    }
+
+  // ...
+
+// Automatically speak out the text after a delay
+var delayTimer;
+$('#input-text').on('input', function() {
+  clearTimeout(delayTimer);
+  delayTimer = setTimeout(function() {
+    var text = $('#input-text').text();
+    speakText(text);
+    currentText = text;
+  }, 2000);
+}).trigger('input'); // Trigger the input event immediately
+
+// Event listener for when text is pasted
+$('#input-text').on('paste', function() {
+  setTimeout(function() {
+    var text = $('#input-text').text();
+    speakText(text);
+    currentText = text;
+  }, 100);
+});
+
+// Event listener for response text changes
+$('#response-text').on('DOMSubtreeModified', function() {
+  var responseText = $('#response-text').text();
+  speakText(responseText);
+});
+
+// ...
+
+
+    // Event listener for when text is pasted
+    $('#input-text').on('paste', function() {
+      setTimeout(function() {
+        if (!isPlaying) {
+          var text = $('#input-text').text();
+          speakText(text);
+          currentText = text;
+        }
+      }, 100);
+    });
+  });
+</script>
+
+<style>
+  text-to-speech-container {
+    margin-top: 550px; /* adjust this value as needed */
+    font-size: 25px; /* Adjust the font size as desired */
+    padding: 20px; /* Adjust the padding as desired */
+    border: 1.5px solid #cccccc00; /* Add border style as desired */
+    border-radius: 100px; /* Add border radius as desired */
+    width: 1000px; /* Increase the width value as desired */
+    text-align: center;
+    
+  }
+
+  #input-text {
+    outline: none;
+  }
+</style>
+
+
+
+
+  </script>
+</body>
+</html>
+</body>
+</html>
